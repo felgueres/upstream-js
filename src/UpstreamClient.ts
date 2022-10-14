@@ -1,4 +1,13 @@
 import ErrorBoundary from "./ErrorBoundary.js";
+import UpstreamNetwork from "./Network.js";
+import UpstreamSDKOptions, { UpstreamOptions } from "./UpstreamSDKOptions.js";
+import UpstreamStore from "./UpstreamStore.js";
+import UpstreamIdentity from "./UpstreamIdentity.js";
+import UpstreamLogger from "./UpstreamLogger.js";
+import { UpstreamUser } from "./UpstreamUser.js";
+import { getUserCacheKey } from "./utils/Hashing.js";
+
+export type _SDKPackageInfo = { sdkType: string; sdkVersion: string; };
 
 export interface IUpstream {
     // initializeAsync(): Promise<void>; // means you will implement initAsync and will return a promise
@@ -9,54 +18,115 @@ export interface IUpstream {
 }
 
 export interface IHasUpstreamInternal {
+    getSDKKey(): string;
     getErrorBoundary(): ErrorBoundary;
-    // getNetwork(): StatsigNetwork;
-    // getStore(): StatsigStore;
-    // getLogger(): StatsigLogger;
-    // getOptions(): StatsigSDKOptions;
-    // getCurrentUser(): StatsigUser | null;
-    // getSDKKey(): string;
-    // getSDKType(): string;
-    // getSDKVersion(): string;
+    getNetwork(): UpstreamNetwork;
+    getOptions(): UpstreamSDKOptions;
+    getStore(): UpstreamStore;
+    getCurrentUser(): UpstreamUser | null;
+    getCurrentUserCacheKey(): string; // May not be required
+    getLogger(): UpstreamLogger;
+    getUpstreamMetadata(): Record<string, string | number>;
+    getSDKType(): string;
+    getSDKVersion(): string;
 }
 
-export type StatsigOverrides = {
-    // <string, boolean> means key is a string and value is a boolean
+export type UpstreamOverrides = {
     gates: Record<string, boolean>;
-    configs: Record<string, Record<string, any>>;
 };
 
-// Init sdk with sk
-// Pass key name or id
-// Retrieve value 
-
 export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
+    // FIELD DECLARATION
     private ready: boolean;
     private initCalled: boolean = false;
     private pendingInitPromise: Promise<void> | null = null;
-
     private errorBoundary: ErrorBoundary;
+    private sdkKey: string | null;
+    private identity: UpstreamIdentity;
+    private network: UpstreamNetwork;
+    private options: UpstreamSDKOptions;
+    private store: UpstreamStore;
+    private logger: UpstreamLogger;
+
+    // CONSTRUCTOR 
+    public constructor(
+        sdkKey: string,
+        user?: UpstreamUser | null,
+        options?: UpstreamOptions | null
+    ) {
+        if (typeof sdkKey !== 'string' || !sdkKey.startsWith('sk-')) {
+            throw new Error('Invalid key provided.  You must use a Client SDK Key from Upstream dashboard to initialize the sdk.',);
+        }
+        this.errorBoundary = new ErrorBoundary(sdkKey);
+        this.ready = false;
+        this.sdkKey = sdkKey;
+        this.options = new UpstreamSDKOptions(options);
+        this.identity = new UpstreamIdentity(
+            this.normalizeUser(user ?? null),
+            this.options.getOverrideStableID())
+
+        this.network = new UpstreamNetwork(this);
+        this.store = new UpstreamStore(this);
+        this.logger = new UpstreamLogger(this);
+    }
+
+    // GET METHODS 
+    public initializeCalled(): boolean {
+        return this.initCalled
+    }
+
     public getErrorBoundary(): ErrorBoundary {
         return this.errorBoundary;
     }
 
-    private sdkKey: string | null;
     public getSDKKey(): string {
         if (this.sdkKey == null) { return ''; }
         return this.sdkKey;
     }
 
-    public constructor(sdkKey: string) {
-        this.ready = false;
-        if (typeof sdkKey !== 'string' || !sdkKey.startsWith('sk-')) {
-            throw new Error('Invalid key provided.  You must use a Client SDK Key from Upstream dashboard to initialize the sdk.',);
+    public getCurrentUser(): UpstreamUser | null {
+        return this.identity.getUser();
+    }
+
+    public getNetwork(): UpstreamNetwork {
+        return this.network;
+    }
+
+    public getOptions(): UpstreamSDKOptions {
+        return this.options;
+    }
+
+    public getStore(): UpstreamStore {
+        return this.store;
+    }
+
+    public getLogger(): UpstreamLogger {
+        return this.logger;
+    }
+
+    public getCurrentUserCacheKey(): string {
+        return getUserCacheKey(this.getCurrentUser());
+    }
+
+    public getUpstreamMetadata(): Record<string, string | number> {
+        return this.identity.getUpstreamMetadata();
+    }
+
+    public getSDKType(): string {
+        return this.identity.getSDKType();
+    }
+
+    public getSDKVersion(): string {
+        return this.identity.getSDKVersion();
+    }
+
+    // HELPER FUNCS
+    private normalizeUser(user: UpstreamUser | null): UpstreamUser {
+        let userCopy = JSON.parse(JSON.stringify(user));
+        if (this.options.getEnvironment() != null) {
+          // @ts-ignore
+          userCopy.statsigEnvironment = this.options.getEnvironment();
         }
-        this.sdkKey = sdkKey;
-        this.errorBoundary = new ErrorBoundary(sdkKey);
-    }
-
-    public initializeCalled(): boolean {
-        return this.initCalled
-    }
-
+        return userCopy;
+      }
 } 
