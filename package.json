@@ -1,0 +1,34 @@
+{
+  "name": "upstream",
+  "version": "1.0.0",
+  "description": "Upstream JS client",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepare": "rm -rf build/ && rm -rf dist/ && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/felgueres/upstream-js.git"
+  },
+  "files": [
+    "dist/*.js",
+    "dist/*.d.ts"
+  ],
+  "keywords": [
+    "upstream",
+    "feature",
+    "flags",
+    "fast",
+    "dev"
+  ],
+  "author": "Upstream API",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/felgueres/upstream-js/issues"
+  },
+  "homepage": "https://github.com/felgueres/upstream-js#readme",
+  "devDependencies": {
+    "typescript": "^4.8.4"
+  }
+}
