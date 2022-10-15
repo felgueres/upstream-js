@@ -19,7 +19,7 @@ export default class Upstream {
     if (!Upstream.instance) {
       Upstream.instance = inst;
     }
-    // return inst.initializeAsync();
+    return inst.initializeAsync();
   }
 
   public static getClientX(): UpstreamClient {

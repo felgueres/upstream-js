@@ -5,8 +5,8 @@ import { UpstreamEndpoint } from './Network';
 import { IHasUpstreamInternal } from './UpstreamClient';
 
 import { STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY } from './utils/Constants';
-import StatsigAsyncStorage from './utils/StatsigAsyncStorage';
-import StatsigLocalStorage from './utils/StatsigLocalStorage';
+import StatsigAsyncStorage from './utils/UpstreamAsyncStorage';
+import StatsigLocalStorage from './utils/UpstreamLocalStorage';
 
 const INTERNAL_EVENT_PREFIX = 'statsig::';
 const CONFIG_EXPOSURE_EVENT = INTERNAL_EVENT_PREFIX + 'config_exposure';

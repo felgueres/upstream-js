@@ -4,25 +4,25 @@ export type AsyncStorage = {
   removeItem(key: string): Promise<void>;
 };
 
-export default class StatsigAsyncStorage {
+export default class UpstreamAsyncStorage {
   public static asyncStorage: AsyncStorage;
   public static getItemAsync(key: string): Promise<string | null> {
-    if (StatsigAsyncStorage.asyncStorage) {
-      return StatsigAsyncStorage.asyncStorage.getItem(key) ?? null;
+    if (UpstreamAsyncStorage.asyncStorage) {
+      return UpstreamAsyncStorage.asyncStorage.getItem(key) ?? null;
     }
     return Promise.resolve(null);
   }
 
   public static setItemAsync(key: string, value: string): Promise<void> {
-    if (StatsigAsyncStorage.asyncStorage) {
-      return StatsigAsyncStorage.asyncStorage.setItem(key, value);
+    if (UpstreamAsyncStorage.asyncStorage) {
+      return UpstreamAsyncStorage.asyncStorage.setItem(key, value);
     }
     return Promise.resolve();
   }
 
   public static removeItemAsync(key: string): Promise<void> {
-    if (StatsigAsyncStorage.asyncStorage) {
-      return StatsigAsyncStorage.asyncStorage.removeItem(key);
+    if (UpstreamAsyncStorage.asyncStorage) {
+      return UpstreamAsyncStorage.asyncStorage.removeItem(key);
     }
     return Promise.resolve();
   }

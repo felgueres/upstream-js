@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { STATSIG_STABLE_ID_KEY } from './utils/Constants';
-import StatsigAsyncStorage from './utils/StatsigAsyncStorage';
-import StatsigLocalStorage from './utils/StatsigLocalStorage';
+import StatsigAsyncStorage from './utils/UpstreamAsyncStorage';
+import StatsigLocalStorage from './utils/UpstreamLocalStorage';
 
 import { _SDKPackageInfo } from './UpstreamClient';
 import { UpstreamUser } from './UpstreamUser';

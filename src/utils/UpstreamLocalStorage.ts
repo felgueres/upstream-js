@@ -1,6 +1,6 @@
 import { LOCAL_STORAGE_KEYS, STORAGE_PREFIX } from './Constants';
 
-export default class StatsigLocalStorage {
+export default class UpstreamLocalStorage {
   public static disabled: boolean = false;
   private static fallbackSessionCache: Record<string, string> = {};
   public static getItem(key: string): string | null {

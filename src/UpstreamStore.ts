@@ -1,8 +1,8 @@
 import { IHasUpstreamInternal, UpstreamOverrides } from './UpstreamClient';
 import { INTERNAL_STORE_KEY, OVERRIDES_STORE_KEY, STICKY_DEVICE_EXPERIMENTS_KEY, } from './utils/Constants';
 import { getHashValue } from './utils/Hashing';
-import StatsigAsyncStorage from './utils/StatsigAsyncStorage';
-import StatsigLocalStorage from './utils/StatsigLocalStorage';
+import StatsigAsyncStorage from './utils/UpstreamAsyncStorage';
+import StatsigLocalStorage from './utils/UpstreamLocalStorage';
 
 export enum EvaluationReason {
   Network = 'Network',
@@ -268,16 +268,16 @@ export default class StatsigStore {
       }
       details = this.getEvaluationDetails(value != null);
     }
-    // this.sdkInternal
-    //   .getLogger()
-    //   .logGateExposure(
-    //     this.sdkInternal.getCurrentUser(),
-    //     gateName,
-    //     gateValue.value,
-    //     gateValue.rule_id,
-    //     gateValue.secondary_exposures,
-    //     details,
-    //   );
+    this.sdkInternal
+      .getLogger()
+      .logGateExposure(
+        this.sdkInternal.getCurrentUser(),
+        gateName,
+        gateValue.value,
+        gateValue.rule_id,
+        gateValue.secondary_exposures,
+        details,
+      );
     return gateValue.value === true;
   }
 
