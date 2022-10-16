@@ -204,7 +204,6 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
                         cb(Date.now() - startTime, success, message);
                     }
                 };
-                console.log('FETCHING VALUES BABY');
                 this.pendingInitPromise = this.fetchAndSaveValues(
                     this.identity.getUser(),
                     completionCallback,
@@ -250,7 +249,6 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
             'Call and wait for initialize() to finish first.',
           );
         }
-        console.log('loaded?', this.store.isLoaded())
       }
 
     private async fetchAndSaveValues(

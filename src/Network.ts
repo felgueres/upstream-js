@@ -55,8 +55,8 @@ export default class UpstreamNetwork {
       UpstreamEndpoint.Initialize,
       {
         user,
-        prefetchUsers
-        // statsigMetadata: this.sdkInternal.getStatsigMetadata(),
+        prefetchUsers,
+        statsigMetadata: this.sdkInternal.getUpstreamMetadata(),
       },
       resolveCallback,
       rejectCallback,
@@ -164,24 +164,31 @@ export default class UpstreamNetwork {
     backoff: number = 1000,
     useKeepalive: boolean = false,
   ): Promise<NetworkResponse> {
+
+    console.log('POASTER')
     if (this.sdkInternal.getOptions().getLocalModeEnabled()) {
+      console.log('1')
       return Promise.reject('no network requests in localMode');
     }
     if (typeof fetch !== 'function') {
+      // console.log('FETCH',fetch)
       // fetch is not defined in this environment, short circuit
+      console.log('2', typeof fetch)
       return Promise.reject('fetch is not defined');
     }
 
     if (typeof window === 'undefined') {
+      console.log('3')
       // dont issue requests from the server
       return Promise.reject('window is not defined');
     }
+    console.log('4')
 
-    const api =
-      endpointName == UpstreamEndpoint.Initialize
+    const api = endpointName == UpstreamEndpoint.Initialize
         ? this.sdkInternal.getOptions().getApi()
         : this.sdkInternal.getOptions().getEventLoggingApi();
     const url = api + endpointName;
+    console.log('URL', url);
     const counter = this.leakyBucket[url];
     if (counter != null && counter >= 30) {
       return Promise.reject(

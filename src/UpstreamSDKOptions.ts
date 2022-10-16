@@ -1,7 +1,6 @@
-import Upstream from '.';
 import { UpstreamUser } from './UpstreamUser';
 
-const DEFAULT_FEATURE_GATE_API = 'https://api.upstreamapi.com/';
+const DEFAULT_FEATURE_GATE_API = 'https://upstreamapi.herokuapp.com/';
 const DEFAULT_EVENT_LOGGING_API = 'https://api.upstreamapi.com/';
 
 export type StatsigEnvironment = {
