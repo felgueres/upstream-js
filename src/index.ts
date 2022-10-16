@@ -6,7 +6,7 @@ import { UpstreamUser } from "./UpstreamUser";
 export default class Upstream {
   private static instance: UpstreamClient | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   public static async initialize(
     sdkKey: string,
@@ -16,9 +16,7 @@ export default class Upstream {
 
     const inst = Upstream.instance ?? new UpstreamClient(sdkKey, user, options);
 
-    if (!Upstream.instance) {
-      Upstream.instance = inst;
-    }
+    if (!Upstream.instance) { Upstream.instance = inst; }
     return inst.initializeAsync();
   }
 
@@ -27,6 +25,10 @@ export default class Upstream {
       throw new UpstreamUninitializedError();
     }
     return Upstream.instance;
+  }
+
+  public static checkGate(gateName: string, ignoreOverrides: boolean = false,): boolean {
+    return Upstream.getClientX().checkGate(gateName, ignoreOverrides);
   }
 
 }

@@ -52,7 +52,7 @@ export default class ErrorBoundary {
       throw error; // Don't catch these
     }
 
-    console.error('[Statsig] An unexpected exception occurred.', error);
+    console.error('[Upstream] An unexpected exception occurred.', error);
 
     this.logError(tag, error, getExtraData);
     return recover();

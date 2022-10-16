@@ -74,6 +74,10 @@ export default class UpstreamNetwork {
     retries: number = 0,
     backoff: number = 1000,
   ): Promise<void> {
+
+    console.log('endpoint:', endpointName)
+    console.log('body:', body)
+
     const fetchPromise = this.postToEndpoint(
       endpointName,
       body,
@@ -96,7 +100,7 @@ export default class UpstreamNetwork {
               return this.getErrorData(res);
             },
           );
-        }
+        } 
 
         return Promise.reject(
           new Error(
@@ -213,6 +217,7 @@ export default class UpstreamNetwork {
       body: postBody,
       headers: {
         'Content-type': 'application/json; charset=UTF-8',
+        'Authorization': `Bearer ${this.sdkInternal.getSDKKey()}`,
         'STATSIG-API-KEY': this.sdkInternal.getSDKKey(),
         'STATSIG-CLIENT-TIME': Date.now() + '',
         'STATSIG-ENCODED': shouldEncode ? '1' : '0',

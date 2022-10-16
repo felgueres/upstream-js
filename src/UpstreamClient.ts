@@ -8,12 +8,13 @@ import { UpstreamUser } from "./UpstreamUser.js";
 import { getUserCacheKey } from "./utils/Hashing.js";
 import { AppState, AppStateStatus } from "./AppStates.js";
 import UpstreamAsyncStorage from "./utils/UpstreamAsyncStorage.js";
+import { UpstreamInvalidArgumentError, UpstreamUninitializedError } from "./Errors.js";
 
 export type _SDKPackageInfo = { sdkType: string; sdkVersion: string; };
 
 export interface IUpstream {
     initializeAsync(): Promise<void>;
-    // checkGate(gateName: string, ignoreOverrides?: boolean): boolean; // Means will return boolean
+    checkGate(gateName: string, ignoreOverrides?: boolean): boolean;
     // shutdown(): void; 
     // overrideGate(gateName: string, value: boolean): void; // means will return void
     // removeGateOverride(gateName?: string): void;
@@ -58,7 +59,6 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
         user?: UpstreamUser | null,
         options?: UpstreamOptions | null
     ) {
-        console.log('CONSTRUCTOR CLIENT')
         if (typeof sdkKey !== 'string' || !sdkKey.startsWith('sk-')) {
             throw new Error('Invalid key provided.  You must use a Client SDK Key from Upstream dashboard to initialize the sdk.',);
         }
@@ -73,12 +73,11 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
         this.network = new UpstreamNetwork(this);
         this.store = new UpstreamStore(this);
         this.logger = new UpstreamLogger(this);
-        this.errorBoundary.setStatsigMetadata(this.getUpstreamMetadata());
 
-        if (options?.initializeValues != null){
-            console.log('initialiiiing values')
+        if (options?.initializeValues != null) {
             this.setInitializeValues(options?.initializeValues);
         }
+        this.errorBoundary.setStatsigMetadata(this.getUpstreamMetadata());
     }
 
     // GET METHODS 
@@ -167,7 +166,6 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
     // CRITICAL FUNCTIONALITY
 
     public async initializeAsync(): Promise<void> {
-        console.log('INIT ASYNC INSIDE')
         return this.errorBoundary.capture(
             'initializeAsync',
             async () => {
@@ -205,16 +203,14 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
                     if (cb) {
                         cb(Date.now() - startTime, success, message);
                     }
-                    console.log('COMPlETION CALLBACK')
                 };
+                console.log('FETCHING VALUES BABY');
                 this.pendingInitPromise = this.fetchAndSaveValues(
                     this.identity.getUser(),
                     completionCallback,
                 ).finally(async () => {
-                    console.log('FINALLY')
                     this.pendingInitPromise = null;
                     this.ready = true;
-                    console.log('AM I READY?', this.ready)
                     this.logger.sendSavedRequests();
                 });
             },
@@ -228,24 +224,33 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
 
     public setInitializeValues(initializeValues: Record<string, unknown>): void {
         this.errorBoundary.capture(
-          'setInitializeValues',
-          () => {
-            this.store.bootstrap(initializeValues);
-            if (!this.ready) {
-              // the sdk is usable and considered initialized when configured
-              // with initializeValues
-              this.ready = true;
-              this.initCalled = true;
-            }
-            // we wont have access to window/document/localStorage if these run on the server
-            // so try to run whenever this is called
-            this.logger.sendSavedRequests();
-          },
-          () => {
-            this.ready = true;
-            this.initCalled = true;
-          },
+            'setInitializeValues',
+            () => {
+                this.store.bootstrap(initializeValues);
+                if (!this.ready) {
+                    // the sdk is usable and considered initialized when configured
+                    // with initializeValues
+                    this.ready = true;
+                    this.initCalled = true;
+                }
+                // we wont have access to window/document/localStorage if these run on the server
+                // so try to run whenever this is called
+                this.logger.sendSavedRequests();
+            },
+            () => {
+                this.ready = true;
+                this.initCalled = true;
+            },
         );
+    }
+
+    private ensureStoreLoaded(): void {
+        if (!this.store.isLoaded()) {
+          throw new UpstreamUninitializedError(
+            'Call and wait for initialize() to finish first.',
+          );
+        }
+        console.log('loaded?', this.store.isLoaded())
       }
 
     private async fetchAndSaveValues(
@@ -276,5 +281,20 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
             });
     }
 
-
+    // FETCH FROM UPSTREAM API
+    public checkGate(gateName: string, ignoreOverrides: boolean = false,): boolean {
+        return this.errorBoundary.capture(
+            'checkGate',
+            () => {
+                this.ensureStoreLoaded();
+                if (typeof gateName !== 'string' || gateName.length === 0) {
+                    throw new UpstreamInvalidArgumentError(
+                        'Must pass a valid string as the gateName.',
+                    );
+                }
+                return this.store.checkGate(gateName, ignoreOverrides);
+            },
+            () => false,
+        );
+    }
 }

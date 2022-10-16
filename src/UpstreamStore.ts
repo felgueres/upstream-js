@@ -59,7 +59,7 @@ type UserCacheValues = APIInitializeDataWithPrefetchedUsers & {
 
 const MAX_USER_VALUE_CACHED = 10;
 
-export default class StatsigStore {
+export default class UpstreamStore {
   private sdkInternal: IHasUpstreamInternal;
   private overrides: UpstreamOverrides = { gates: {}, };
   private loaded: boolean;
