@@ -56,7 +56,7 @@ export default class UpstreamNetwork {
       {
         user,
         prefetchUsers,
-        statsigMetadata: this.sdkInternal.getUpstreamMetadata(),
+        upstreamMetadata: this.sdkInternal.getUpstreamMetadata(),
       },
       resolveCallback,
       rejectCallback,
@@ -182,13 +182,12 @@ export default class UpstreamNetwork {
       // dont issue requests from the server
       return Promise.reject('window is not defined');
     }
-    console.log('4')
-
+    // Able to post 
+    console.log('NETWORK ABLE TO POST')
     const api = endpointName == UpstreamEndpoint.Initialize
         ? this.sdkInternal.getOptions().getApi()
         : this.sdkInternal.getOptions().getEventLoggingApi();
     const url = api + endpointName;
-    console.log('URL', url);
     const counter = this.leakyBucket[url];
     if (counter != null && counter >= 30) {
       return Promise.reject(
@@ -204,12 +203,13 @@ export default class UpstreamNetwork {
       this.leakyBucket[url] = counter + 1;
     }
 
+    let postBody = JSON.stringify(body);
+
     let shouldEncode =
       endpointName === UpstreamEndpoint.Initialize &&
       UpstreamRuntime.encodeInitializeCall &&
       typeof window?.btoa === 'function';
 
-    let postBody = JSON.stringify(body);
     if (shouldEncode) {
       try {
         const encoded = window.btoa(postBody).split('').reverse().join('');
@@ -225,9 +225,8 @@ export default class UpstreamNetwork {
       headers: {
         'Content-type': 'application/json; charset=UTF-8',
         'Authorization': `Bearer ${this.sdkInternal.getSDKKey()}`,
-        'STATSIG-API-KEY': this.sdkInternal.getSDKKey(),
-        'STATSIG-CLIENT-TIME': Date.now() + '',
-        'STATSIG-ENCODED': shouldEncode ? '1' : '0',
+        'UPSTREAM-CLIENT-TIME': Date.now() + '',
+        'UPSTREAM-ENCODED': shouldEncode ? '1' : '0',
       },
     };
 
@@ -296,7 +295,7 @@ export default class UpstreamNetwork {
       };
     } catch (_e) {
       return {
-        statusText: 'statsig::failed to extract extra data',
+        statusText: 'upstream::failed to extract extra data',
       };
     }
   }
