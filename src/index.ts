@@ -1,10 +1,19 @@
 import { UpstreamUninitializedError } from "./Errors";
 import UpstreamClient from "./UpstreamClient";
+import UpstreamRuntime from "./UpstreamRuntime";
 import { UpstreamOptions } from "./UpstreamSDKOptions";
 import { UpstreamUser } from "./UpstreamUser";
 
 export default class Upstream {
   private static instance: UpstreamClient | null = null;
+
+  static get encodeIntializeCall(): boolean {
+    return UpstreamRuntime.encodeInitializeCall;
+  }
+
+  static set encodeIntializeCall(value: boolean) {
+    UpstreamRuntime.encodeInitializeCall = value;
+  }
 
   private constructor() { }
 

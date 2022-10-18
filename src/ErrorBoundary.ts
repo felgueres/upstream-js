@@ -1,6 +1,6 @@
 import { UpstreamUninitializedError, UpstreamInvalidArgumentError, } from './Errors.js';
 
-export const ExceptionEndpoint = 'https://statsigapi.net/v1/sdk_exception';
+export const ExceptionEndpoint = 'http://127.0.0.1:3010/sdk_exception';
 
 type ExtraDataExtractor = () => Promise<Record<string, unknown>>;
 
@@ -37,8 +37,6 @@ export default class ErrorBoundary {
     }
   }
 
-  // capture<T>(tag: 'initialiase async', async () => {}, ()=> {return Promise} )
-
   private onCaught<T>(
     tag: string,
     error: unknown,
@@ -63,6 +61,7 @@ export default class ErrorBoundary {
     error: unknown,
     getExtraData?: ExtraDataExtractor,
   ): Promise<void> {
+    console.log('logerror::')
     try {
       const extra =
         typeof getExtraData === 'function' ? await getExtraData() : null;

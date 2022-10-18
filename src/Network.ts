@@ -51,6 +51,9 @@ export default class UpstreamNetwork {
     rejectCallback: (e: Error) => void,
     prefetchUsers?: Record<string, UpstreamUser>,
   ): Promise<void> {
+
+    console.log('fetchValues::user', user)
+
     return this.postWithTimeout(
       UpstreamEndpoint.Initialize,
       {
@@ -75,8 +78,8 @@ export default class UpstreamNetwork {
     backoff: number = 1000,
   ): Promise<void> {
 
-    console.log('endpoint:', endpointName)
-    console.log('body:', body)
+    console.log('endpoint::', endpointName)
+    console.log('body::', body)
 
     const fetchPromise = this.postToEndpoint(
       endpointName,
@@ -133,30 +136,6 @@ export default class UpstreamNetwork {
     return fetchPromise;
   }
 
-  public sendLogBeacon(payload: Record<string, any>): boolean {
-
-    if (this.sdkInternal.getOptions().getLocalModeEnabled()) {
-      return true;
-    }
-
-    const url = new URL(
-      this.sdkInternal.getOptions().getEventLoggingApi() +
-        UpstreamEndpoint.LogEventBeacon,
-    );
-
-    url.searchParams.append('k', this.sdkInternal.getSDKKey());
-
-    payload.clientTime = Date.now() + '';
-
-    let stringPayload = null;
-    try {
-      stringPayload = JSON.stringify(payload);
-    } catch (_e) {
-      return false;
-    }
-    return navigator.sendBeacon(url.toString(), stringPayload);
-  }
-
   public async postToEndpoint(
     endpointName: UpstreamEndpoint,
     body: object,
@@ -165,25 +144,23 @@ export default class UpstreamNetwork {
     useKeepalive: boolean = false,
   ): Promise<NetworkResponse> {
 
-    console.log('POASTER')
     if (this.sdkInternal.getOptions().getLocalModeEnabled()) {
-      console.log('1')
       return Promise.reject('no network requests in localMode');
     }
     if (typeof fetch !== 'function') {
-      // console.log('FETCH',fetch)
       // fetch is not defined in this environment, short circuit
-      console.log('2', typeof fetch)
+      console.log('2- no fetch func, instead::', typeof fetch)
       return Promise.reject('fetch is not defined');
     }
 
     if (typeof window === 'undefined') {
-      console.log('3')
+      console.log('3 -- no window')
       // dont issue requests from the server
       return Promise.reject('window is not defined');
     }
     // Able to post 
-    console.log('NETWORK ABLE TO POST')
+    console.log('hasAbilityToPost')
+    console.log('endpointname::',endpointName)
     const api = endpointName == UpstreamEndpoint.Initialize
         ? this.sdkInternal.getOptions().getApi()
         : this.sdkInternal.getOptions().getEventLoggingApi();
@@ -272,6 +249,29 @@ export default class UpstreamNetwork {
       });
   }
 
+  public sendLogBeacon(payload: Record<string, any>): boolean {
+
+    if (this.sdkInternal.getOptions().getLocalModeEnabled()) {
+      return true;
+    }
+
+    const url = new URL(
+      this.sdkInternal.getOptions().getEventLoggingApi() +
+        UpstreamEndpoint.LogEventBeacon,
+    );
+
+    url.searchParams.append('k', this.sdkInternal.getSDKKey());
+
+    payload.clientTime = Date.now() + '';
+
+    let stringPayload = null;
+    try {
+      stringPayload = JSON.stringify(payload);
+    } catch (_e) {
+      return false;
+    }
+    return navigator.sendBeacon(url.toString(), stringPayload);
+  }
   public supportsKeepalive(): boolean {
     return this.canUseKeepalive;
   }

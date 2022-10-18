@@ -115,7 +115,7 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
     }
 
     public getCurrentUserCacheKey(): string {
-        return getUserCacheKey(this.getCurrentUser());
+        return getUserCacheKey(this.getStableID(),this.getCurrentUser());
     }
 
     public getUpstreamMetadata(): Record<string, string | number> {
@@ -166,6 +166,8 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
     // CRITICAL FUNCTIONALITY
 
     public async initializeAsync(): Promise<void> {
+        console.log('initAsync::')
+
         return this.errorBoundary.capture(
             'initializeAsync',
             async () => {
@@ -222,6 +224,9 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
     }
 
     public setInitializeValues(initializeValues: Record<string, unknown>): void {
+
+        console.log('setInitValues::',initializeValues)
+
         this.errorBoundary.capture(
             'setInitializeValues',
             () => {
@@ -257,6 +262,7 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
             | ((success: boolean, message: string | null) => void)
             | null = null,
     ): Promise<void> {
+        console.log('fetchAndSaveValues::')
         return this.network
             .fetchValues(
                 user,
@@ -264,7 +270,7 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
                 async (json: Record<string, any>): Promise<void> => {
                     return this.errorBoundary.swallow('fetchAndSaveValues', async () => {
                         await this.store.save(
-                            getUserCacheKey(user),
+                            getUserCacheKey(this.getStableID(), user),
                             json,
                         );
                     });

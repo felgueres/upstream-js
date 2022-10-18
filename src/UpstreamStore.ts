@@ -72,6 +72,7 @@ export default class UpstreamStore {
   public constructor(sdkInternal: IHasUpstreamInternal) {
     this.sdkInternal = sdkInternal;
     this.userCacheKey = this.sdkInternal.getCurrentUserCacheKey();
+    console.log('userCacheKey::', this.userCacheKey)
     this.values = {};
     this.userValues = {
       feature_gates: {},
@@ -101,6 +102,9 @@ export default class UpstreamStore {
   }
 
   public bootstrap(initializeValues: Record<string, any>): void {
+
+    console.log('bootstrapp init values::', initializeValues)
+
     const key = this.sdkInternal.getCurrentUserCacheKey();
     // clients are going to assume that the SDK is bootstraped after this method runs
     // if we fail to parse, we will fall back to defaults, but we dont want to throw
@@ -122,6 +126,7 @@ export default class UpstreamStore {
 
   private loadFromLocalStorage(): void {
     if (StatsigAsyncStorage.asyncStorage) {
+      console.log('asyncStorage::', StatsigAsyncStorage.asyncStorage)
       return;
     }
     this.parseCachedValues(
@@ -139,6 +144,7 @@ export default class UpstreamStore {
     allValues: string | null,
     deviceExperiments: string | null,
   ): void {
+    console.log('parseCachedValue::', this.parseCachedValues)
     try {
       this.values = allValues ? JSON.parse(allValues) : this.values;
       this.setUserValueFromCache();
@@ -197,7 +203,13 @@ export default class UpstreamStore {
     jsonConfigs: Record<string, any>,
   ): Promise<void> {
     const data = jsonConfigs as APIInitializeDataWithPrefetchedUsers;
+
+    console.log('responsedata <str,any>::', data)
+    console.log('requestedUserCacheKey <str>::', requestedUserCacheKey)
+    console.log('objectvalues::', this.values)
+
     if (data.prefetched_user_values) {
+      console.log('prefetcheduservalues::')
       const cacheKeys = Object.keys(data.prefetched_user_values);
       for (const key of cacheKeys) {
         const prefetched = data.prefetched_user_values[key];
@@ -206,10 +218,14 @@ export default class UpstreamStore {
     }
 
     if (requestedUserCacheKey) {
+      console.log('requestedUserCacheKey::', requestedUserCacheKey)
       const requestedUserValues = this.convertAPIDataToCacheValues(
         data,
         requestedUserCacheKey,
       );
+
+      console.log('requesteduservalue::', requestedUserValues)
+
       this.values[requestedUserCacheKey] = requestedUserValues;
 
       if (requestedUserCacheKey == this.userCacheKey) {
@@ -249,35 +265,47 @@ export default class UpstreamStore {
     ignoreOverrides: boolean = false,
   ): boolean {
     const gateNameHash = getHashValue(gateName);
-    let gateValue = { value: false, rule_id: '', secondary_exposures: [] };
-    let details: EvaluationDetails;
+    console.log('gatename::', gateName)
+    console.log('gatehash::', gateNameHash)
+    // let gateValue = { value: false, rule_id: '' }; //default
+    let gateValue = { value: false, rule_id: '', secondary_exposures: [] }; // original
+    console.log('gatevalueDefault::', gateValue)
+    let details: EvaluationDetails; // this is specifying type of details
+
     if (!ignoreOverrides && this.overrides.gates[gateName] != null) {
       gateValue = {
         value: this.overrides.gates[gateName],
         rule_id: 'override',
-        secondary_exposures: [],
+        secondary_exposures: []
       };
       details = this.getEvaluationDetails(
         false,
         EvaluationReason.LocalOverride,
       );
-    } else {
-      let value = this.userValues?.feature_gates[gateNameHash];
+    }
+    else {
+      // let value = this.userValues?.feature_gates[gateNameHash]; hash provenance is unclear
+      let value = this.userValues?.feature_gates[gateName];
+      console.log('userValues::', this.userValues)
       if (value) {
         gateValue = value;
       }
       details = this.getEvaluationDetails(value != null);
     }
-    this.sdkInternal
-      .getLogger()
-      .logGateExposure(
-        this.sdkInternal.getCurrentUser(),
-        gateName,
-        gateValue.value,
-        gateValue.rule_id,
-        gateValue.secondary_exposures,
-        details,
-      );
+
+    console.log('gateValue::value::', gateValue.value)
+
+    // this.sdkInternal
+    //   .getLogger()
+    //   .logGateExposure(
+    //     this.sdkInternal.getCurrentUser(),
+    //     gateName,
+    //     gateValue.value,
+    //     gateValue.rule_id,
+    //     gateValue.secondary_exposures,
+    //     details,
+    //   );
+
     return gateValue.value === true;
   }
 
@@ -353,6 +381,8 @@ export default class UpstreamStore {
     data: APIInitializeData,
     cacheKey: string,
   ): UserCacheValues {
+    console.log('Init data::', data)
+    console.log('Init data gates::', data.feature_gates)
     // Specifically pulling keys from data here to avoid pulling in unwanted keys
     return {
       feature_gates: data.feature_gates,
