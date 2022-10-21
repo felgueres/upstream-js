@@ -267,21 +267,20 @@ export default class UpstreamStore {
     const gateNameHash = getHashValue(gateName);
     console.log('gatename::', gateName)
     console.log('gatehash::', gateNameHash)
+    console.log('userValue::', this.userValues)
     // let gateValue = { value: false, rule_id: '' }; //default
     let gateValue = { value: false, rule_id: '', secondary_exposures: [] }; // original
     console.log('gatevalueDefault::', gateValue)
     let details: EvaluationDetails; // this is specifying type of details
 
     if (!ignoreOverrides && this.overrides.gates[gateName] != null) {
+      console.log('ignoreOverridesActive::')
       gateValue = {
         value: this.overrides.gates[gateName],
         rule_id: 'override',
         secondary_exposures: []
       };
-      details = this.getEvaluationDetails(
-        false,
-        EvaluationReason.LocalOverride,
-      );
+      details = this.getEvaluationDetails( false, EvaluationReason.LocalOverride,);
     }
     else {
       // let value = this.userValues?.feature_gates[gateNameHash]; hash provenance is unclear
@@ -295,16 +294,13 @@ export default class UpstreamStore {
 
     console.log('gateValue::value::', gateValue.value)
 
-    // this.sdkInternal
-    //   .getLogger()
-    //   .logGateExposure(
-    //     this.sdkInternal.getCurrentUser(),
-    //     gateName,
-    //     gateValue.value,
-    //     gateValue.rule_id,
-    //     gateValue.secondary_exposures,
-    //     details,
-    //   );
+    this.sdkInternal.getLogger().logGateExposure(
+        this.sdkInternal.getCurrentUser(),
+        gateName,
+        gateValue.value,
+        gateValue.rule_id,
+        gateValue.secondary_exposures,
+        details);
 
     return gateValue.value === true;
   }
@@ -381,9 +377,10 @@ export default class UpstreamStore {
     data: APIInitializeData,
     cacheKey: string,
   ): UserCacheValues {
-    console.log('Init data::', data)
-    console.log('Init data gates::', data.feature_gates)
+    console.log('initdata::', data)
+    console.log('initfeaturegates::', data.feature_gates)
     // Specifically pulling keys from data here to avoid pulling in unwanted keys
+
     return {
       feature_gates: data.feature_gates,
       layer_configs: data.layer_configs,

@@ -6,12 +6,12 @@ export default class LogEvent {
   private value: string | number | null = null;
   private metadata: object | null = null;
   private time: number;
-  private statsigMetadata: Record<string, string | number>;
+  private upstreamMetadata: Record<string, string | number>;
   private secondaryExposures?: Record<string, string>[];
 
   public constructor(eventName: string) {
     this.eventName = eventName;
-    this.statsigMetadata = {};
+    this.upstreamMetadata = {};
     this.time = Date.now();
   }
 
@@ -27,8 +27,8 @@ export default class LogEvent {
     this.metadata = metadata;
   }
 
-  public addStatsigMetadata(key: string, value: string | number) {
-    this.statsigMetadata[key] = value;
+  public addUpstreamMetadata(key: string, value: string | number) {
+    this.upstreamMetadata[key] = value;
   }
 
   public setUser(newUser: UpstreamUser | null) {
@@ -48,7 +48,7 @@ export default class LogEvent {
       value: this.value,
       metadata: this.metadata,
       time: this.time,
-      statsigMetadata: this.statsigMetadata,
+      upstreamMetadata: this.upstreamMetadata,
       secondaryExposures: this.secondaryExposures ?? undefined,
     };
   }

@@ -5,10 +5,10 @@ import { UpstreamEndpoint } from './Network';
 import { IHasUpstreamInternal } from './UpstreamClient';
 
 import { STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY } from './utils/Constants';
-import StatsigAsyncStorage from './utils/UpstreamAsyncStorage';
-import StatsigLocalStorage from './utils/UpstreamLocalStorage';
+import AsyncStorage from './utils/UpstreamAsyncStorage';
+import LocalStorage from './utils/UpstreamLocalStorage';
 
-const INTERNAL_EVENT_PREFIX = 'statsig::';
+const INTERNAL_EVENT_PREFIX = 'upstream::';
 const CONFIG_EXPOSURE_EVENT = INTERNAL_EVENT_PREFIX + 'config_exposure';
 const LAYER_EXPOSURE_EVENT = INTERNAL_EVENT_PREFIX + 'layer_exposure';
 const GATE_EXPOSURE_EVENT = INTERNAL_EVENT_PREFIX + 'gate_exposure';
@@ -21,7 +21,7 @@ const APP_METRICS_DOM_INTERACTIVE_EVENT =
 
 type FailedLogEventBody = {
   events: object[];
-  statsigMetadata: object;
+  upstreamMetadata: object;
   time: number;
 };
 
@@ -101,14 +101,17 @@ export default class UpstreamLogger {
         // https://stackoverflow.com/questions/6257463/how-to-get-the-url-without-any-parameters-in-javascript
         const parts = window.location.href.split(/[?#]/);
         if (parts?.length > 0) {
-          event.addStatsigMetadata('currentPage', parts[0]);
+          event.addUpstreamMetadata('currentPage', parts[0]);
         }
       }
     } catch (_e) {}
 
+    console.log('logger::eventToJSON::', event.toJsonObject())
+
     this.queue.push(event.toJsonObject());
 
     if (
+      // Nice this allows X events in buffer before flushing. 
       this.queue.length >=
       this.sdkInternal.getOptions().getLoggingBufferMaxSize()
     ) {
@@ -142,7 +145,13 @@ export default class UpstreamLogger {
     secondaryExposures: Record<string, string>[],
     details: EvaluationDetails,
   ) {
+
+    console.log('logger::ruleID', ruleID)
+
     const dedupeKey = gateName + String(gateValue) + ruleID + details.reason;
+
+    console.log('logger::dedupeKey', dedupeKey)
+
     if (!this.shouldLogExposure(dedupeKey)) {
       return;
     }
@@ -156,6 +165,9 @@ export default class UpstreamLogger {
       time: details.time,
     });
     gateExposure.setSecondaryExposures(secondaryExposures);
+
+    console.log('logger::gateExposure::', gateExposure)
+
     this.log(gateExposure);
   }
 
@@ -291,14 +303,14 @@ export default class UpstreamLogger {
     ) {
       const beacon = this.sdkInternal.getNetwork().sendLogBeacon({
         events: oldQueue,
-        statsigMetadata: this.sdkInternal.getUpstreamMetadata(),
+        upstreamMetadata: this.sdkInternal.getUpstreamMetadata(),
       });
       if (!beacon) {
         this.queue = oldQueue.concat(this.queue);
         if (this.queue.length > 0) {
           this.addFailedRequest({
             events: this.queue,
-            statsigMetadata: this.sdkInternal.getUpstreamMetadata(),
+            upstreamMetadata: this.sdkInternal.getUpstreamMetadata(),
             time: Date.now(),
           });
           this.queue = [];
@@ -315,7 +327,7 @@ export default class UpstreamLogger {
         UpstreamEndpoint.Rgstr,
         {
           events: oldQueue,
-          statsigMetadata: this.sdkInternal.getUpstreamMetadata(),
+          upstreamMetadata: this.sdkInternal.getUpstreamMetadata(),
         },
         3 /* retries */,
         1000 /* backoff */,
@@ -350,7 +362,7 @@ export default class UpstreamLogger {
           if (this.queue.length > 0) {
             this.addFailedRequest({
               events: this.queue,
-              statsigMetadata: this.sdkInternal.getUpstreamMetadata(),
+              upstreamMetadata: this.sdkInternal.getUpstreamMetadata(),
               time: Date.now(),
             });
 
@@ -369,14 +381,14 @@ export default class UpstreamLogger {
         this.clearLocalStorageRequests();
         return;
       }
-      if (StatsigAsyncStorage.asyncStorage) {
-        await StatsigAsyncStorage.setItemAsync(
+      if (AsyncStorage.asyncStorage) {
+        await AsyncStorage.setItemAsync(
           STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
           requestsCopy,
         );
         return;
       }
-      StatsigLocalStorage.setItem(
+      LocalStorage.setItem(
         STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
         requestsCopy,
       );
@@ -386,12 +398,12 @@ export default class UpstreamLogger {
   public async sendSavedRequests(): Promise<void> {
     let failedRequests;
     let fireAndForget = false;
-    if (StatsigAsyncStorage.asyncStorage) {
-      failedRequests = await StatsigAsyncStorage.getItemAsync(
+    if (AsyncStorage.asyncStorage) {
+      failedRequests = await AsyncStorage.getItemAsync(
         STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
       );
     } else {
-      failedRequests = StatsigLocalStorage.getItem(
+      failedRequests = LocalStorage.getItem(
         STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
       );
     }
@@ -449,12 +461,12 @@ export default class UpstreamLogger {
   }
 
   private clearLocalStorageRequests(): void {
-    if (StatsigAsyncStorage.asyncStorage) {
-      StatsigAsyncStorage.removeItemAsync(
+    if (AsyncStorage.asyncStorage) {
+      AsyncStorage.removeItemAsync(
         STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
       );
     } else {
-      StatsigLocalStorage.removeItem(STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY);
+      LocalStorage.removeItem(STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY);
     }
   }
 
@@ -467,7 +479,7 @@ export default class UpstreamLogger {
 
     this.failedLogEvents.push({
       events: queue,
-      statsigMetadata: this.sdkInternal.getUpstreamMetadata(),
+      upstreamMetadata: this.sdkInternal.getUpstreamMetadata(),
       time: Date.now(),
     });
 
