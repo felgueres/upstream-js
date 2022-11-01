@@ -6,15 +6,15 @@ type ExtraDataExtractor = () => Promise<Record<string, unknown>>;
 
 export default class ErrorBoundary {
   private sdkKey: string;
-  private statsigMetadata?: Record<string, string | number>;
+  private upstreamMetadata?: Record<string, string | number>;
   private seen = new Set<string>();
 
   constructor(sdkKey: string) {
     this.sdkKey = sdkKey;
   }
 
-  setStatsigMetadata(statsigMetadata: Record<string, string | number>) {
-    this.statsigMetadata = statsigMetadata;
+  setUpstreamMetadata(upstreamMetadata: Record<string, string | number>) {
+    this.upstreamMetadata = upstreamMetadata;
   }
 
   swallow<T>(tag: string, task: () => T) {
@@ -73,20 +73,20 @@ export default class ErrorBoundary {
       this.seen.add(name);
 
       const info = isError ? unwrapped.stack : this.getDescription(unwrapped);
-      const metadata = this.statsigMetadata ?? {};
+      const metadata = this.upstreamMetadata ?? {};
       const body = JSON.stringify({
         tag,
         exception: name,
         info,
-        statsigMetadata: metadata,
+        upstreamMetadata: metadata,
         extra: extra ?? {},
       });
       fetch(ExceptionEndpoint, {
         method: 'POST',
         headers: {
-          'STATSIG-API-KEY': this.sdkKey,
-          'STATSIG-SDK-TYPE': String(metadata['sdkType']),
-          'STATSIG-SDK-VERSION': String(metadata['sdkVersion']),
+          'UPSTREAM-API-KEY': this.sdkKey,
+          'UPSTREAM-SDK-TYPE': String(metadata['sdkType']),
+          'UPSTREAM-SDK-VERSION': String(metadata['sdkVersion']),
           'Content-Type': 'application/json',
           'Content-Length': `${body.length}`,
         },

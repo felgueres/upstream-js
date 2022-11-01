@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { STATSIG_STABLE_ID_KEY } from './utils/Constants';
-import StatsigAsyncStorage from './utils/UpstreamAsyncStorage';
-import StatsigLocalStorage from './utils/UpstreamLocalStorage';
+import { UPSTREAM_STABLE_ID_KEY } from './utils/Constants';
+import AsyncStorage from './utils/UpstreamAsyncStorage';
+import LocalStorage from './utils/UpstreamLocalStorage';
 
 import { _SDKPackageInfo } from './UpstreamClient';
 import { UpstreamUser } from './UpstreamUser';
@@ -46,7 +46,7 @@ export type UUID = {
   v4(): string | number[];
 };
 
-type StatsigMetadata = {
+type Metadata = {
   sessionID: string;
   sdkType: string;
   sdkVersion: string;
@@ -61,7 +61,7 @@ type StatsigMetadata = {
 
 export default class UpstreamIdentity {
   private user: UpstreamUser | null;
-  private upstreamMetadata: StatsigMetadata;
+  private upstreamMetadata: Metadata;
   private platform: Platform | null = null;
   private nativeModules: NativeModules | null = null;
   private reactNativeUUID?: UUID;
@@ -83,12 +83,12 @@ export default class UpstreamIdentity {
     };
 
     let stableID = overrideStableID;
-    if (!StatsigAsyncStorage.asyncStorage) {
+    if (!AsyncStorage.asyncStorage) {
       stableID =
         stableID ??
-        StatsigLocalStorage.getItem(STATSIG_STABLE_ID_KEY) ??
+        LocalStorage.getItem(UPSTREAM_STABLE_ID_KEY) ??
         this.getUUID();
-      StatsigLocalStorage.setItem(STATSIG_STABLE_ID_KEY, stableID);
+      LocalStorage.setItem(UPSTREAM_STABLE_ID_KEY, stableID);
     }
     if (stableID) {
       this.upstreamMetadata.stableID = stableID;
@@ -98,10 +98,10 @@ export default class UpstreamIdentity {
   public async initAsync(): Promise<UpstreamIdentity> {
     let stableID: string | null | undefined = this.upstreamMetadata.stableID;
     if (!stableID) {
-      stableID = await StatsigAsyncStorage.getItemAsync(STATSIG_STABLE_ID_KEY);
+      stableID = await AsyncStorage.getItemAsync(UPSTREAM_STABLE_ID_KEY);
       stableID = stableID ?? this.getUUID();
     }
-    StatsigAsyncStorage.setItemAsync(STATSIG_STABLE_ID_KEY, stableID);
+    AsyncStorage.setItemAsync(UPSTREAM_STABLE_ID_KEY, stableID);
     this.upstreamMetadata.stableID = stableID;
     return this;
   }

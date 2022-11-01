@@ -4,7 +4,7 @@ import { UpstreamUser } from './UpstreamUser';
 const DEFAULT_FEATURE_GATE_API = 'http://127.0.0.1:3010';
 const DEFAULT_EVENT_LOGGING_API = 'http://127.0.0.1:3010';
 
-export type StatsigEnvironment = {
+export type UpstreamEnvironment = {
   tier?: 'production' | 'staging' | 'development' | string;
   [key: string]: string | undefined;
 };
@@ -18,7 +18,7 @@ export type InitCompletionCallback = (
 export type UpstreamOptions = {
   api?: string;
   disableCurrentPageLogging?: boolean;
-  environment?: StatsigEnvironment;
+  environment?: UpstreamEnvironment;
   loggingIntervalMillis?: number;
   loggingBufferMaxSize?: number;
   disableNetworkKeepalive?: boolean;
@@ -43,7 +43,7 @@ type BoundedNumberInput = {
 export default class UpstreamSDKOptions {
   private api: string;
   private disableCurrentPageLogging: boolean;
-  private environment: StatsigEnvironment | null;
+  private environment: UpstreamEnvironment | null;
   private loggingIntervalMillis: number;
   private loggingBufferMaxSize: number;
   private disableNetworkKeepalive: boolean;
@@ -107,7 +107,7 @@ export default class UpstreamSDKOptions {
     return this.api;
   }
 
-  getEnvironment(): StatsigEnvironment | null {
+  getEnvironment(): UpstreamEnvironment | null {
     return this.environment;
   }
 

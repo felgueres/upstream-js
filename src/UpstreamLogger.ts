@@ -4,7 +4,7 @@ import { EvaluationDetails } from './UpstreamStore';
 import { UpstreamEndpoint } from './Network';
 import { IHasUpstreamInternal } from './UpstreamClient';
 
-import { STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY } from './utils/Constants';
+import { UPSTREAM_LOCAL_STORAGE_LOGGING_REQUEST_KEY } from './utils/Constants';
 import AsyncStorage from './utils/UpstreamAsyncStorage';
 import LocalStorage from './utils/UpstreamLocalStorage';
 
@@ -265,7 +265,7 @@ export default class UpstreamLogger {
 
     const navEntry = entries[0] as any;
     const metadata = {
-      statsig_dimensions: {
+      upstream_dimensions: {
         url: navEntry.name,
       },
     };
@@ -383,13 +383,13 @@ export default class UpstreamLogger {
       }
       if (AsyncStorage.asyncStorage) {
         await AsyncStorage.setItemAsync(
-          STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
+          UPSTREAM_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
           requestsCopy,
         );
         return;
       }
       LocalStorage.setItem(
-        STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
+        UPSTREAM_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
         requestsCopy,
       );
     }
@@ -400,11 +400,11 @@ export default class UpstreamLogger {
     let fireAndForget = false;
     if (AsyncStorage.asyncStorage) {
       failedRequests = await AsyncStorage.getItemAsync(
-        STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
+        UPSTREAM_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
       );
     } else {
       failedRequests = LocalStorage.getItem(
-        STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
+        UPSTREAM_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
       );
     }
     if (failedRequests == null) {
@@ -463,10 +463,10 @@ export default class UpstreamLogger {
   private clearLocalStorageRequests(): void {
     if (AsyncStorage.asyncStorage) {
       AsyncStorage.removeItemAsync(
-        STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
+        UPSTREAM_LOCAL_STORAGE_LOGGING_REQUEST_KEY,
       );
     } else {
-      LocalStorage.removeItem(STATSIG_LOCAL_STORAGE_LOGGING_REQUEST_KEY);
+      LocalStorage.removeItem(UPSTREAM_LOCAL_STORAGE_LOGGING_REQUEST_KEY);
     }
   }
 

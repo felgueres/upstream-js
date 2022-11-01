@@ -77,7 +77,7 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
         if (options?.initializeValues != null) {
             this.setInitializeValues(options?.initializeValues);
         }
-        this.errorBoundary.setStatsigMetadata(this.getUpstreamMetadata());
+        this.errorBoundary.setUpstreamMetadata(this.getUpstreamMetadata());
     }
 
     // GET METHODS 
@@ -143,7 +143,7 @@ export default class UpstreamClient implements IUpstream, IHasUpstreamInternal {
         let userCopy = JSON.parse(JSON.stringify(user));
         if (this.options.getEnvironment() != null) {
             // @ts-ignore
-            userCopy.statsigEnvironment = this.options.getEnvironment();
+            userCopy.upstreamEnvironment = this.options.getEnvironment();
         }
         return userCopy;
     }

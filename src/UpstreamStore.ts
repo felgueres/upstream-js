@@ -1,8 +1,8 @@
 import { IHasUpstreamInternal, UpstreamOverrides } from './UpstreamClient';
 import { INTERNAL_STORE_KEY, OVERRIDES_STORE_KEY, STICKY_DEVICE_EXPERIMENTS_KEY, } from './utils/Constants';
 import { getHashValue } from './utils/Hashing';
-import StatsigAsyncStorage from './utils/UpstreamAsyncStorage';
-import StatsigLocalStorage from './utils/UpstreamLocalStorage';
+import UpstreamAsyncStorage from './utils/UpstreamAsyncStorage';
+import UpstreamLocalStorage from './utils/UpstreamLocalStorage';
 
 export enum EvaluationReason {
   Network = 'Network',
@@ -95,8 +95,8 @@ export default class UpstreamStore {
 
   public async loadFromAsyncStorage(): Promise<void> {
     this.parseCachedValues(
-      await StatsigAsyncStorage.getItemAsync(INTERNAL_STORE_KEY),
-      await StatsigAsyncStorage.getItemAsync(STICKY_DEVICE_EXPERIMENTS_KEY),
+      await UpstreamAsyncStorage.getItemAsync(INTERNAL_STORE_KEY),
+      await UpstreamAsyncStorage.getItemAsync(STICKY_DEVICE_EXPERIMENTS_KEY),
     );
     this.loaded = true;
   }
@@ -125,13 +125,13 @@ export default class UpstreamStore {
   }
 
   private loadFromLocalStorage(): void {
-    if (StatsigAsyncStorage.asyncStorage) {
-      console.log('asyncStorage::', StatsigAsyncStorage.asyncStorage)
+    if (UpstreamAsyncStorage.asyncStorage) {
+      console.log('asyncStorage::', UpstreamAsyncStorage.asyncStorage)
       return;
     }
     this.parseCachedValues(
-      StatsigLocalStorage.getItem(INTERNAL_STORE_KEY),
-      StatsigLocalStorage.getItem(STICKY_DEVICE_EXPERIMENTS_KEY),
+      UpstreamLocalStorage.getItem(INTERNAL_STORE_KEY),
+      UpstreamLocalStorage.getItem(STICKY_DEVICE_EXPERIMENTS_KEY),
     );
     this.loaded = true;
   }
@@ -183,17 +183,17 @@ export default class UpstreamStore {
   }
 
   private removeFromStorage(key: string) {
-    StatsigAsyncStorage.removeItemAsync(key);
-    StatsigLocalStorage.removeItem(key);
+    UpstreamAsyncStorage.removeItemAsync(key);
+    UpstreamLocalStorage.removeItem(key);
   }
 
   private loadOverrides(): void {
-    const overrides = StatsigLocalStorage.getItem(OVERRIDES_STORE_KEY);
+    const overrides = UpstreamLocalStorage.getItem(OVERRIDES_STORE_KEY);
     if (overrides != null) {
       try {
         this.overrides = JSON.parse(overrides);
       } catch (e) {
-        StatsigLocalStorage.removeItem(OVERRIDES_STORE_KEY);
+        UpstreamLocalStorage.removeItem(OVERRIDES_STORE_KEY);
       }
     }
   }
@@ -247,13 +247,13 @@ export default class UpstreamStore {
       })
       .slice(0, MAX_USER_VALUE_CACHED);
     this.values = Object.fromEntries(filteredValues);
-    if (StatsigAsyncStorage.asyncStorage) {
-      await StatsigAsyncStorage.setItemAsync(
+    if (UpstreamAsyncStorage.asyncStorage) {
+      await UpstreamAsyncStorage.setItemAsync(
         INTERNAL_STORE_KEY,
         JSON.stringify(this.values),
       );
     } else {
-      StatsigLocalStorage.setItem(
+      UpstreamLocalStorage.setItem(
         INTERNAL_STORE_KEY,
         JSON.stringify(this.values),
       );
@@ -325,7 +325,7 @@ export default class UpstreamStore {
 
   private saveOverrides(): void {
     try {
-      StatsigLocalStorage.setItem(
+      UpstreamLocalStorage.setItem(
         OVERRIDES_STORE_KEY,
         JSON.stringify(this.overrides),
       );
